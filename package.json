@@ -1,0 +1,12 @@
+{
+  "name": "drawing-app",
+  "version": "1.0.0",
+  "description": "A simple handwriting drawing app",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}

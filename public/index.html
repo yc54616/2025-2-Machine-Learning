@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>반응형 손글씨 그림판</title>
+    <style>
+        /* 기본 스타일 초기화 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            width: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+        }
+
+        /* 메인 컨테이너 (Flexbox로 중앙 정렬) */
+        .container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh; /* 화면 전체 높이를 차지하도록 설정 */
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            text-align: center;
+            word-break: keep-all; /* 제목이 줄바꿈될 때 단어 단위로 끊기도록 */
+        }
+
+        /* 캔버스를 감싸는 래퍼 */
+        .canvas-wrapper {
+            max-width: 100%; /* 화면보다 커지지 않도록 */
+        }
+
+        /* 캔버스 스타일 */
+        canvas {
+            width: 100%; /* 래퍼에 꽉 차게 */
+            height: auto; /* 너비에 맞춰 높이 자동 조절 */
+            max-width: 380px; /* 원본 최대 크기 제한 */
+            max-height: 380px;
+            border: 2px solid #ccc;
+            border-radius: 8px; /* 부드러운 모서리 */
+            background-color: white;
+            cursor: crosshair;
+            touch-action: none; /* 모바일에서 그릴 때 화면 스크롤 방지 */
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* 그림자 효과 */
+        }
+
+        /* 컨트롤 버튼 그룹 */
+        .controls {
+            margin-top: 25px;
+            display: flex;
+            gap: 15px; /* 버튼 사이 간격 */
+        }
+
+        button {
+            font-size: 1rem;
+            font-weight: bold;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            color: white;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        button:active {
+            transform: translateY(2px); /* 클릭 시 살짝 눌리는 효과 */
+        }
+
+        #downloadBtn {
+            background-color: #007bff; /* 파란색 계열 */
+        }
+
+        #clearBtn {
+            background-color: #dc3545; /* 빨간색 계열 */
+        }
+        
+        button:hover {
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        /* 화면이 작은 기기를 위한 미디어 쿼리 */
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.5rem;
+            }
+            .controls {
+                flex-direction: column; /* 버튼을 세로로 쌓기 */
+                width: 100%;
+                max-width: 380px;
+            }
+            button {
+                width: 100%; /* 버튼 너비를 꽉 채우기 */
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>380x380 손글씨 그림판 ✍️</h1>
+        <div class="canvas-wrapper">
+            <canvas id="drawingCanvas" width="380" height="380"></canvas>
+        </div>
+        <div class="controls">
+            <button id="downloadBtn">다운로드</button>
+            <button id="clearBtn">모두 지우기</button>
+        </div>
+    </div>
+
+    <script>
+        // JavaScript 코드는 이전과 동일합니다.
+        const canvas = document.getElementById('drawingCanvas');
+        const ctx = canvas.getContext('2d');
+        let isDrawing = false;
+        
+        // 배경을 흰색으로 초기화
+        ctx.fillStyle = "white";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        ctx.strokeStyle = 'black';
+        ctx.lineWidth = 5;
+        ctx.lineCap = 'round';
+        
+        // 실제 캔버스의 크기와 화면에 표시되는 CSS 크기 비율을 계산하여 좌표 보정
+        function getPosition(event) {
+            const rect = canvas.getBoundingClientRect();
+            const clientX = event.clientX || event.touches[0].clientX;
+            const clientY = event.clientY || event.touches[0].clientY;
+
+            // 스케일 계산
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            
+            return {
+                x: (clientX - rect.left) * scaleX,
+                y: (clientY - rect.top) * scaleY
+            };
+        }
+
+        function startDrawing(e) {
+            isDrawing = true;
+            const pos = getPosition(e);
+            ctx.beginPath();
+            ctx.moveTo(pos.x, pos.y);
+            e.preventDefault();
+        }
+
+        function draw(e) {
+            if (!isDrawing) return;
+            const pos = getPosition(e);
+            ctx.lineTo(pos.x, pos.y);
+            ctx.stroke();
+            e.preventDefault();
+        }
+
+        function stopDrawing() {
+            isDrawing = false;
+            ctx.closePath();
+        }
+
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('mouseleave', stopDrawing);
+
+        canvas.addEventListener('touchstart', startDrawing);
+        canvas.addEventListener('touchmove', draw);
+        canvas.addEventListener('touchend', stopDrawing);
+
+        document.getElementById('downloadBtn').addEventListener('click', function() {
+            const link = document.createElement('a');
+            link.download = 'handwriting.png';
+            link.href = canvas.toDataURL('image/png').replace('image/png', 'image/octet-stream');
+            link.click();
+        });
+
+        document.getElementById('clearBtn').addEventListener('click', function() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "white";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        });
+    </script>
+
+</body>
+</html>
