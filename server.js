@@ -5,7 +5,7 @@ const path = require('path');
 // express 앱을 생성합니다.
 const app = express();
 // 클라우드 플랫폼에서 제공하는 PORT 환경 변수를 사용하고, 없을 경우 3000번을 사용합니다.
-const PORT = process.env.PORT || 3000;
+const PORT = 80;
 
 // 'public' 폴더에 있는 정적 파일들(html, css, js)을 사용하도록 설정합니다.
 app.use(express.static(path.join(__dirname, 'public')));
